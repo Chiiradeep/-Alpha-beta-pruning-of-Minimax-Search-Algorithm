@@ -1,6 +1,6 @@
 <h1>ExpNo 7 : Implement Alpha-beta pruning of Minimax Search Algorithm for a Simple TIC-TAC-TOE game</h1> 
-<h3>Name:       </h3>
-<h3>Register Number/Staff Id:           </h3>
+<h3>Name: Chiiradeep R      </h3>
+<h3>Register Number: 212224240028          </h3>
 <H3>Aim:</H3>
 <p>
 Implement Alpha-beta pruning of Minimax Search Algorithm for a Simple TIC-TAC-TOE game
@@ -32,3 +32,208 @@ When added to a simple minimax algorithm, it gives the same output but cuts off 
 ![image](https://github.com/natsaravanan/19AI405FUNDAMENTALSOFARTIFICIALINTELLIGENCE/assets/87870499/81575a16-26b2-46f1-a8ac-27c9ed0a0fe5)
 
 
+# Program:
+
+~~~py
+import time
+
+class Game:
+    def __init__(self):
+        self.initialize_game()
+
+    def initialize_game(self):
+        self.current_state = [['.','.','.'],
+                              ['.','.','.'],
+                              ['.','.','.']]
+
+        # Player X always plays first
+        self.player_turn = 'X'
+
+    def draw_board(self):
+        for i in range(0, 3):
+            for j in range(0, 3):
+                print('{}|'.format(self.current_state[i][j]), end=" ")
+            print()
+        print()
+    def is_valid(self, px, py):
+        if px < 0 or px > 2 or py < 0 or py > 2:
+            return False
+        elif self.current_state[px][py] != '.':
+            return False
+        else:
+            return True
+    def is_end(self):
+    # Vertical win
+        for i in range(0, 3):
+            if (self.current_state[0][i] != '.' and
+                self.current_state[0][i] == self.current_state[1][i] and
+                self.current_state[1][i] == self.current_state[2][i]):
+                return self.current_state[0][i]
+
+        # Horizontal win
+        for i in range(0, 3):
+            if (self.current_state[i] == ['X', 'X', 'X']):
+                return 'X'
+            elif (self.current_state[i] == ['O', 'O', 'O']):
+                return 'O'
+
+    # Main diagonal win
+        if (self.current_state[0][0] != '.' and
+            self.current_state[0][0] == self.current_state[1][1] and
+            self.current_state[0][0] == self.current_state[2][2]):
+            return self.current_state[0][0]
+
+    # Second diagonal win
+        if (self.current_state[0][2] != '.' and
+            self.current_state[0][2] == self.current_state[1][1] and
+            self.current_state[0][2] == self.current_state[2][0]):
+            return self.current_state[0][2]
+
+    # Is the whole board full?
+        for i in range(0, 3):
+            for j in range(0, 3):
+                if self.current_state[i][j] == '.':
+                    return None
+    # It's a tie!
+        return '.'
+    def max_alpha_beta(self, alpha, beta):
+        maxv = -2
+        px = None
+        py = None
+
+        result = self.is_end()
+
+        if result == 'X':
+            return (-1, 0, 0)
+        elif result == 'O':
+            return (1, 0, 0)
+        elif result == '.':
+            return (0, 0, 0)
+
+        for i in range(0, 3):
+            for j in range(0, 3):
+                if self.current_state[i][j] == '.':
+                    self.current_state[i][j] = 'O'
+                    (m, min_i, in_j) = self.min_alpha_beta(alpha, beta)
+                    if m > maxv:
+                        maxv = m
+                        px = i
+                        py = j
+                    self.current_state[i][j] = '.'
+
+                    # Next two ifs in Max and Min are the only difference between regular algorithm and minimax
+                    if maxv >= beta:
+                        return (maxv, px, py)
+
+                    if maxv > alpha:
+                        alpha = maxv
+
+        return (maxv, px, py)
+
+    def min_alpha_beta(self, alpha, beta):
+
+        minv = 2
+
+        qx = None
+        qy = None
+
+        result = self.is_end()
+
+        if result == 'X':
+            return (-1, 0, 0)
+        elif result == 'O':
+            return (1, 0, 0)
+        elif result == '.':
+            return (0, 0, 0)
+
+        for i in range(0, 3):
+            for j in range(0, 3):
+                if self.current_state[i][j] == '.':
+                    self.current_state[i][j] = 'X'
+                    (m, max_i, max_j) = self.max_alpha_beta(alpha, beta)
+                    if m < minv:
+                        minv = m
+                        qx = i
+                        qy = j
+                    self.current_state[i][j] = '.'
+
+                    if minv <= alpha:
+                        return (minv, qx, qy)
+
+                    if minv < beta:
+                        beta = minv
+
+        return (minv, qx, qy)
+    def play_alpha_beta(self):
+        while True:
+            self.draw_board()
+            self.result = self.is_end()
+
+            if self.result != None:
+                if self.result == 'X':
+                    print('The winner is X!')
+                elif self.result == 'O':
+                    print('The winner is O!')
+                elif self.result == '.':
+                    print("It's a tie!")
+
+
+                self.initialize_game()
+                return
+
+            if self.player_turn == 'X':
+
+                while True:
+                    start = time.time()
+                    (m, qx, qy) = self.min_alpha_beta(-2, 2)
+                    end = time.time()
+                    print('Evaluation time: {}s'.format(round(end - start, 7)))
+                    print('Recommended move: X = {}, Y = {}'.format(qx, qy))
+
+                    px = int(input('Insert the X coordinate: '))
+                    py = int(input('Insert the Y coordinate: '))
+
+                    qx = px
+                    qy = py
+
+                    if self.is_valid(px, py):
+                        self.current_state[px][py] = 'X'
+                        self.player_turn = 'O'
+                        break
+                    else:
+                        print('The move is not valid! Try again.')
+
+            else:
+                (m, px, py) = self.max_alpha_beta(-2, 2)
+                self.current_state[px][py] = 'O'
+                self.player_turn = 'X'
+
+
+
+def main():
+    g = Game()
+    g.play_alpha_beta()
+
+if __name__ == "__main__":
+    main()
+~~~
+
+# Output:
+
+<img width="948" height="379" alt="511913563-c094238b-600b-4b44-97cb-0e3e6cdc3815" src="https://github.com/user-attachments/assets/96245c25-799e-4fe8-9eb5-c0cb5e286cbc" />
+
+
+<img width="852" height="243" alt="511913393-8e947b69-32db-4c4c-bc11-7022e302e844" src="https://github.com/user-attachments/assets/eedb0e16-21c8-4d71-bc19-e2cdc4ecbb89" />
+
+
+<img width="791" height="244" alt="511913359-3f6f25a8-eb0d-4609-8428-ff5fd4e44ae1" src="https://github.com/user-attachments/assets/3eaa5ecb-5540-4b97-adb9-0daa92a710e5" />
+
+
+<img width="890" height="243" alt="511913428-908b135e-cabe-4b27-b375-0003d510f18d" src="https://github.com/user-attachments/assets/92dd5f3a-068d-468c-89cd-02e2f8468208" />
+
+<img width="1082" height="163" alt="511913302-4daa66cd-1b0f-4496-81cd-628fb4f5c698" src="https://github.com/user-attachments/assets/8d61d488-6772-4d8a-a161-486076ed1153" />
+
+
+# Result:
+
+THE CODE IS RUN AND EXECUTED SUCCESSFULLY.
